@@ -28,7 +28,8 @@ Python 3, standard library only. Writes `data/neighborhoods.json` and `data/neig
 | `chat.js` | Builds the neighborhood's persona prompt from real stats and calls `/api/chat` |
 | `app.js` | Screens: onboarding, swipe deck, match / reject / "are you sure" sheets, results |
 | `logic.js` | Pure logic: scoring, reasons, deck building, copy tokens (no DOM) |
-| `art.js` | Illustrated "photos" as inline SVG (swap in real photos here) |
+| `art.js` | Illustrated fallback "photos" as inline SVG |
+| `data/photos.js`, `photos/` | Real Wikimedia Commons photos (10 neighborhoods) with credit and license. Add more here. |
 | `data/profiles.js` | Hand-edited profile copy for each neighborhood (**edit this**) |
 | `data/neighborhoods.*` | Generated data, do not edit by hand |
 | `fetch_data.py` | Data pipeline |

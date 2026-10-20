@@ -1,0 +1,74 @@
+{
+ "bushwick": {
+  "src": "photos/bushwick.jpg",
+  "credit": "Wil Fyfordy",
+  "license": "CC BY-SA 4.0",
+  "source": "https://commons.wikimedia.org/wiki/File:Mural_McKibbinSt_2021_Sure_We_Can.jpg"
+ },
+ "williamsburg": {
+  "src": "photos/williamsburg.jpg",
+  "credit": "Kidfly182",
+  "license": "CC BY 4.0",
+  "source": "https://commons.wikimedia.org/wiki/File:Williamsburg_Brooklyn_June_2026_66.jpg"
+ },
+ "park-slope": {
+  "src": "photos/park-slope.jpg",
+  "credit": "Ajay Suresh from New York, NY, USA",
+  "license": "CC BY 2.0",
+  "source": "https://commons.wikimedia.org/wiki/File:Park_Slope_Brownstone_(48291928226).jpg"
+ },
+ "sunset-park": {
+  "src": "photos/sunset-park.jpg",
+  "credit": "Rhododendrites",
+  "license": "CC BY-SA 4.0",
+  "source": "https://commons.wikimedia.org/wiki/File:Sunset_Park_(16471p).jpg"
+ },
+ "crown-heights": {
+  "src": "photos/crown-heights.jpg",
+  "credit": "Andre Carrotflower",
+  "license": "CC BY-SA 4.0",
+  "source": "https://commons.wikimedia.org/wiki/File:St._John%27s_Place,_Crown_Heights,_Brooklyn_-_20200908.jpg"
+ },
+ "astoria": {
+  "src": "photos/astoria.jpg",
+  "credit": "Kidfly182",
+  "license": "CC BY 4.0",
+  "source": "https://commons.wikimedia.org/wiki/File:Astoria_Queens_February_2026_007.jpg"
+ },
+ "lic": {
+  "src": "photos/lic.jpg",
+  "credit": "Kidfly182",
+  "license": "CC BY 4.0",
+  "source": "https://commons.wikimedia.org/wiki/File:Long_Island_City_Skyline_2026.jpg"
+ },
+ "jackson-heights": {
+  "src": "photos/jackson-heights.jpg",
+  "credit": "Deans Charbal",
+  "license": "CC BY-SA 4.0",
+  "source": "https://commons.wikimedia.org/wiki/File:74th_Street_(east_sidewalk)_between_37th_Ave_and_37th_Rd,_Jackson_Heights,_Queens,_New_York.jpg"
+ },
+ "ridgewood": {
+  "src": "photos/ridgewood.jpg",
+  "credit": "Kidfly182",
+  "license": "CC BY 4.0",
+  "source": "https://commons.wikimedia.org/wiki/File:Ridgewood_Queens_April_2025_020.jpg"
+ },
+ "east-village": {
+  "src": "photos/east-village.jpg",
+  "credit": "Kidfly182",
+  "license": "CC BY-SA 4.0",
+  "source": "https://commons.wikimedia.org/wiki/File:East_Village_Manhattan_May_2022_033.jpg"
+ },
+ "washington-heights": {
+  "src": "photos/washington-heights.jpg",
+  "credit": "Epicgenius",
+  "license": "CC BY-SA 4.0",
+  "source": "https://commons.wikimedia.org/wiki/File:Washington_Heights_Aug_2026_75.jpg"
+ },
+ "mott-haven": {
+  "src": "photos/mott-haven.jpg",
+  "credit": "Deans Charbal",
+  "license": "CC BY-SA 4.0",
+  "source": "https://commons.wikimedia.org/wiki/File:149th_Street_@_St._Ann%27s_Avenue,_looking_west,_2024-06-16,_Mott_Haven,_South_Bronx,_New_York.jpg"
+ }
+}

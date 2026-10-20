@@ -4,6 +4,7 @@
   'use strict';
   const L = window.NYC, ART = window.NYC_ART;
   const { META, HOODS, BY, N, PROF, FACTORS, ORDER, IMP_LABEL } = L;
+  const PHOTOS = window.PHOTOS || {};
 
   const $ = (s, r = document) => r.querySelector(s);
   const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
@@ -13,7 +14,7 @@
   const app = $('#app'), stage = $('#stage'), topbar = $('#top'), topRight = $('#top-right'), btnBack = $('#btn-back');
   const sheetWrap = $('#sheet-wrap'), sheet = $('#sheet'), pop = $('#pop'), toastEl = $('#toast');
 
-  $('#foot-text').innerHTML = `Data: NYC Open Data, pulled ${META.data_pulled_at}.<br><span class="foot-sub">Rent: Zillow · Commute: MTA GTFS (estimated)</span>`;
+  $('#foot-text').innerHTML = `Data: NYC Open Data, pulled ${META.data_pulled_at} · Never broker sponsored.<br><span class="foot-sub">Rent: Zillow · Commute: MTA GTFS (estimated)</span>`;
 
   // ------------------------------------------------------------------ state
   const KEY = 'swiperight-nyc.profile.v1';
@@ -50,10 +51,17 @@
     stage.innerHTML = `<section class="screen ${cls}">${html}</section>`;
     stage.firstElementChild.scrollTop = 0;
   }
+  // slides on a card: real photos when we have them (data/photos.js), else our illustrations; the stat poster is always last
+  const mediaList = (code) => {
+    const real = PHOTOS[code] || [];
+    return real.length ? real.map((img) => ({ img })).concat([{ poster: 1 }]) : [{ scene: 1 }, { emoji: 1 }, { poster: 1 }];
+  };
   const photo = (code, i) => {
-    const p = PROF[code];
-    if (i === 0 && p.img) return `<img src="${esc(p.img)}" alt="${esc(p.d)}" style="width:100%;height:100%;object-fit:cover" draggable="false">`; // real photo (data/profiles.js: img + credit)
-    return [ART.sceneSVG, ART.emojiSVG, (c, pr) => ART.posterSVG(c, pr, L.poster(BY[c]))][i](code, p);
+    const p = PROF[code], m = mediaList(code)[i] || mediaList(code)[0];
+    if (m.img) return `<img src="${esc(m.img.src)}" alt="${esc(p.d)}" draggable="false">`;
+    if (m.scene) return ART.sceneSVG(code, p);
+    if (m.emoji) return ART.emojiSVG(code, p);
+    return ART.posterSVG(code, p, L.poster(BY[code]));
   };
   const pct = (n) => `${Math.round(n)}%`;
   const lines = (h) => (h.lines.length ? h.lines.join(' ') : 'none');
@@ -100,12 +108,13 @@
     mid: ['🏷️', 'Comfortable', 'A fair price for a fair neighborhood.'],
     high: ['💎', 'Treat-yourself', 'Rent is a love language.'],
   };
+  const NUM = {}; ORDER.forEach((f, i) => { NUM[f] = i + 1; });
   const SRC_TAG = { rent: 'Zillow ZORI', commute: 'MTA GTFS', transit: 'MTA Stop Density', safety: 'NYPD CompStat', green: 'NYC Parks', food: 'DOHMH Restaurant Reg', density: 'Census ZCTA', air: 'DOHMH Community Air', rats: 'DOHMH Rodent Index' };
 
   function scale(key, label, hint) {
     const v = U.imp[key];
     return `<div class="field" data-scale="${key}">
-      <div class="field-label"><span>${label}</span><small class="src-pill">${SRC_TAG[key] || ''}</small></div>
+      <div class="field-label"><span class="q-l"><span class="num">${NUM[key]}</span>${label}</span><small class="src-pill">${SRC_TAG[key] || ''}</small></div>
       <div class="scale" role="group" aria-label="${esc(label)}">${[1, 2, 3, 4, 5].map((n) => `<button data-imp="${key}" data-v="${n}" aria-pressed="${v === n}" aria-label="${n} of 5">${n}</button>`).join('')}</div>
       <div class=\"scale-cap\"><span>Whatever</span><span>Dealbreaker</span></div>
       <div class="scale-say" aria-live="polite">${IMP_LABEL[v - 1]}${hint ? ' · ' + hint : ''}</div>
@@ -149,7 +158,7 @@
   function showStep(i) {
     step = i; S = null;
     const s = STEPS[i];
-    setTop({ back: true, right: `<span class="supers">${i + 1}/${STEPS.length}</span>` });
+    setTop({ back: true, right: `<span class="pill">${i + 1}/${STEPS.length}</span>` });
     screen(`
       <div class="progress" aria-hidden="true" style="padding:0 0 10px">${STEPS.map((_, k) => `<i class="${k < i ? 'done' : k === i ? 'cur' : ''}"></i>`).join('')}</div>
       <div class="q-kicker">${s.kicker}</div>
@@ -183,6 +192,18 @@
   }
   const tagsFor = (fs, cls) => (fs.length ? fs.map((f) => `<span class="tag ${cls}">${FACTORS[f].emoji} ${FACTORS[f].label}</span>`).join('') : '<span class="tag">Nothing. So chill.</span>');
 
+  const BORO_COLOR = { Brooklyn: '#f2b632', Queens: '#b3203a', Manhattan: '#2fb26f', Bronx: '#6c63f5', 'Staten Island': '#8c8a83' };
+  let pendingDeck = null;
+  function projectedHTML() {
+    pendingDeck = L.buildDeck(U);
+    const n = pendingDeck.deck.length, counts = {};
+    pendingDeck.deck.forEach((c) => { counts[BY[c].borough] = (counts[BY[c].borough] || 0) + 1; });
+    const rows = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+    return `<div class="proj"><div class="proj-h"><span>PROJECTED DECK CANDIDATES</span><b>${n} Neighborhoods</b></div>
+      <div class="proj-bar">${rows.map(([b, c]) => `<i style="flex:${c};background:${BORO_COLOR[b] || '#999'}"></i>`).join('')}</div>
+      <div class="proj-l">${rows.map(([b, c]) => `<span><i style="background:${BORO_COLOR[b] || '#999'}"></i>${esc(b)} (${Math.round(100 * c / n)}%)</span>`).join('')}</div></div>`;
+  }
+
   function showPreview() {
     S = null; setTop({ back: true });
     const must = listFactors((v) => v >= 4), chill = listFactors((v) => v <= 2), dealb = listFactors((v) => v === 5);
@@ -202,12 +223,15 @@
           <div><small class="field-label" style="margin-bottom:6px">Chill about</small><div class="tagrow">${tagsFor(chill, '')}</div></div>
         </div>
       </article>
-      <div class="q-actions" style="margin-top:0"><button class="btn mint block" data-act="deck">Meet my matches →</button><button class="btn alt block" data-act="edit">Edit my answers</button></div>`);
+      ${projectedHTML()}
+      <div class="q-actions" style="margin-top:0"><button class="cta" data-act="deck">Calculate Match &amp; Start Swiping →</button><button class="btn alt block" data-act="edit">Edit my answers</button></div>
+      <p class="p-foot">Weights lock directly into your ${pendingDeck.deck.length}-neighborhood swipe deck. Powered by NYC Open Data.</p>`);
   }
 
   // ------------------------------------------------------------------ deck
   function startDeck() {
-    const { deck, scores } = L.buildDeck(U);
+    const { deck, scores } = pendingDeck || L.buildDeck(U);
+    pendingDeck = null;
     S = { deck, scores, idx: 0, supers: L.SUPERS, results: {}, reconsidered: new Set(), busy: false, photo: {} };
     renderDeck();
   }
@@ -231,7 +255,7 @@
     return `<article class="card ${cls}" data-code="${code}" aria-label="${esc(p.d)}">
       <div class="photo">
         <div class="slide" data-slide>${photo(code, S.photo[code])}</div>
-        <div class="bars" aria-hidden="true">${[0, 1, 2].map((i) => `<i class="${i === S.photo[code] ? 'on' : ''}"></i>`).join('')}</div>
+        <div class="bars" aria-hidden="true">${mediaList(code).map((_, i) => `<i class="${i === S.photo[code] ? 'on' : ''}"></i>`).join('')}</div>
         <div class="tapz l" data-tap="-1"></div><div class="tapz r" data-tap="1"></div>
         <div class="shade"></div>
         <div class="loc-pill">📍 ${esc(h.borough.toUpperCase())} · ${esc(h.code)}</div>
@@ -244,24 +268,23 @@
         <div class="name-row"><h2>${esc(p.d)}<i class="dot" title="Verified by open data"></i></h2><span class="age">Age: ${p.age}</span></div>
         <p class="tagline">“${esc(p.tag)}”</p>
         <div class="stat-chips">${topFactorsFor(code).map((f) => chipHTML(f, code)).join('')}</div>
-        <div class="flagchips"><span class="fc good">✔ ${esc(L.fill(p.green, h))}</span><span class="fc bad">✕ ${esc(L.fill(p.red, h))}</span></div>
+        <div class="flagchips"><span class="fc good"><span>✔ ${esc(L.fill(p.green, h))}</span></span><span class="fc bad"><span>✕ ${esc(L.fill(p.red, h))}</span></span></div>
       </div>
     </article>`;
   }
 
   function renderDeck() {
-    setTop({ back: true, right: `<span class="supers" title="Super Likes left">★ ${S.supers}</span>` });
+    setTop({ back: true, right: `<span class="pill" id="counter">${Math.min(S.idx + 1, S.deck.length)} of ${S.deck.length}</span>` });
     setTabs('swipe');
     const rest = S.deck.slice(S.idx, S.idx + 3);
     stage.innerHTML = `<div class="deck-area" id="deck">${rest.map((c, i) => cardHTML(c, i)).reverse().join('')}</div>
       <div class="actions">
         <button class="act undo" data-act="undo" aria-label="Undo last swipe" ${S.idx ? '' : 'disabled'}>↺</button>
         <button class="act no" data-act="nope" aria-label="Pass (left arrow)">✕</button>
-        <button class="act sup" data-act="super" aria-label="Super like (up arrow)" ${S.supers ? '' : 'disabled'}>★</button>
+        <button class="act sup" data-act="super" aria-label="Super like (up arrow), ${S.supers} left" data-n="${S.supers}" ${S.supers ? '' : 'disabled'}>★</button>
         <button class="act info" data-act="info" aria-label="Full profile">ⓘ</button>
         <button class="act yes" data-act="like" aria-label="Like (right arrow)">♥</button>
-      </div>
-      <div class="hint">${S.idx + 1} of ${S.deck.length} · drag the card, tap the photo, or use the buttons</div>`;
+      </div>`;
     const top = $('#deck .card:last-child');
     if (top) attachDrag(top);
   }
@@ -373,24 +396,76 @@
     }).join('')}</div>`;
   }
 
+  const LINE_COLOR = { 1: '#ee352e', 2: '#ee352e', 3: '#ee352e', 4: '#00933c', 5: '#00933c', 6: '#00933c', '6X': '#00933c', 7: '#b933ad', '7X': '#b933ad', A: '#0039a6', C: '#0039a6', E: '#0039a6', B: '#ff6319', D: '#ff6319', F: '#ff6319', M: '#ff6319', G: '#6cbe45', J: '#996633', Z: '#996633', L: '#a7a9ac', N: '#fccc0a', Q: '#fccc0a', R: '#fccc0a', W: '#fccc0a', S: '#808183', SIR: '#0039a6' };
+  const lineDot = (l) => `<span class="line" style="background:${LINE_COLOR[l] || '#777'};${['N', 'Q', 'R', 'W'].includes(l) ? 'color:#222' : ''}">${esc(l === 'SIR' ? 'SI' : l.replace('X', ''))}</span>`;
+  const rating = (rank) => (rank == null ? ['—', ''] : rank <= 14 ? ['GOOD', 'good'] : rank <= 28 ? ['FAIR', 'fair'] : ['NEEDS WORK', 'poor']);
+  const pctBar = (rank) => (rank == null ? 0 : Math.round((100 * (N - rank)) / (N - 1)));
+  const srcRow = (label, code) => `<div class="src"><span>${esc(label)}</span><code>${esc(code)}</code></div>`;
+  const medianRent = (() => { const v = HOODS.map((h) => h.rent_typical).filter((x) => x != null).sort((a, b) => a - b); return v[Math.floor(v.length / 2)]; })();
+
+  function hashtags(code) {
+    const h = BY[code], r = h.ranks, T = { air: 'CleanAir', rats: 'FewRats', rent: 'Affordable', safety: 'LowCrime', green: 'GreenSpace', food: 'FoodScene', transit: 'SubwayRich' };
+    const picks = Object.keys(T).filter((f) => r[f] != null && r[f] <= 8).sort((a, b) => r[a] - r[b]).slice(0, 3).map((f) => '#' + T[f]);
+    return ['#' + h.borough.replace(/\s/g, '')].concat(picks);
+  }
+
+  // the "Open Data Deep-Dive": one panel per factor, each with its dataset
+  function deepDive(code) {
+    const h = BY[code], r = h.ranks, S_ = META.sources;
+    const m = U.work === 'remote' ? null : h.commute_min[U.work];
+    const bigT = U.work === 'remote' ? `${h.stations} stations` : h.code === U.work ? 'Right there' : m == null ? 'No rail route' : `${m} min`;
+    const rentBig = h.rent_typical == null ? '—' : '$' + L.num(h.rent_typical);
+    const ra = rating(r.air), rg = rating(r.green), rs = rating(r.safety);
+    return `
+      <div class="panel statp"><div class="row"><b>🍴 Food &amp; Cafe Density</b><span><span class="big ${r.food <= 21 ? 'green' : 'red'}">${L.num(h.restaurants_per_km2)}</span> / km²</span></div>
+        <div class="row sub"><span>${esc(L.rankLabel('food', h))} of ${N}</span><span>Eateries</span></div><div class="bar"><i style="width:${pctBar(r.food)}%"></i></div>${srcRow(S_.food.label, 'dataset: ' + S_.food.dataset)}</div>
+      <div class="panel statp"><div class="row"><b>🚇 Transit &amp; Commute</b><span class="big">${esc(bigT)}</span></div>
+        <div class="row sub"><span>${h.lines.length ? h.lines.map(lineDot).join('') : 'No subway lines'}</span><span>${U.work === 'remote' ? 'subway access' : 'to ' + esc(META.work_areas[U.work])}</span></div>
+        <div class="two" style="margin-top:10px"><div class="mini">Subway stations<b>${h.stations}</b></div><div class="mini">Per sq km<b>${h.stations_per_km2 == null ? '—' : h.stations_per_km2}</b></div></div>
+        ${srcRow(S_.commute.label, 'feed: mta-gtfs')}</div>
+      <div class="panel statp"><div class="row"><b>💵 Rent Realism</b><span class="big ${r.rent != null && r.rent > 21 ? 'red' : 'green'}">${rentBig}</span></div>
+        <div class="row sub"><span>Typical rent, all homes</span><span>Median of 42 areas: $${L.num(medianRent)}</span></div>
+        <div class="mini" style="margin-top:10px;text-align:left">${r.rent == null ? 'No rent data for this area.' : `${esc(L.rankLabel('rent', h))} of ${N}. Median across ${h.rent_zip_count} of ${h.zips.length} ZIPs. Not 1BR, not a quote.`}</div>${srcRow(S_.rent.label, 'zillow-zori')}</div>
+      <div class="two">
+        <div class="panel statp"><span class="warn ${ra[1]}">${ra[0]}</span><div class="big2">${h.pm25 == null ? '—' : h.pm25.toFixed(1) + ' µg/m³'}</div><div class="sub">PM2.5 Airborne</div>${srcRow('Air Survey', S_.air.dataset)}</div>
+        <div class="panel statp"><span class="warn ${rg[1]}">${rg[0]}</span><div class="big2">${h.park_acres_per_1k.toFixed(1)}</div><div class="sub">Park acres per 1,000 people</div>${srcRow('NYC Parks', S_.green.dataset)}</div>
+      </div>
+      <div class="two">
+        <div class="panel statp"><span class="warn ${rs[1]}">${rs[0]}</span><div class="big2">${h.felonies_per_1k.toFixed(1)} /1k</div><div class="sub">Felony complaints</div>${srcRow('NYPD', S_.safety.dataset)}</div>
+        <div class="panel statp"><span class="warn ${r.density <= 14 ? 'fair' : 'good'}">${r.density <= 14 ? 'BUSY' : 'CALM'}</span><div class="big2">${L.num(h.pop_density_per_km2)}</div><div class="sub">People per sq km</div>${srcRow('Census ZCTA', S_.density.dataset)}</div>
+      </div>
+      <div class="panel rodent statp"><div class="row"><b>🐀 The Rodent Report</b><span class="big red">${h.rat_active_pct == null ? '—' : h.rat_active_pct.toFixed(1) + '%'}</span></div>
+        <div class="sub">${L.num(h.rat_active)} of ${L.num(h.rat_initial_inspections)} initial inspections found active rat signs in the last 12 months.</div>
+        ${srcRow('DOHMH Rodent Inspection', 'dataset: ' + S_.rats.dataset)}</div>`;
+  }
+
+  function creditsHTML(code) {
+    const list = PHOTOS[code] || [];
+    return list.length ? `<p class="credit">Photo${list.length > 1 ? 's' : ''}: ${list.map((ph) => `<a href="${esc(ph.source)}" target="_blank" rel="noopener">${esc(ph.credit)}, ${esc(ph.license)}</a>`).join('; ')}, via Wikimedia Commons</p>` : '';
+  }
+
   function profileBody(code, match) {
     const h = BY[code], p = PROF[code], fill = (s) => esc(L.fill(s, h));
     const total = (S ? S.scores[code] : L.score(h, U)).total;
     const why = L.whyYes(h, U, 3);
-    return `<div class="sheet-hero">${photo(code, 0)}</div>
-      <div class="sheet-body">
-        ${match ? `<div class="result" style="padding:0"><div class="big" aria-hidden="true">💘</div><h2 class="match">It\'s a match!</h2><p class="who">${esc(U.name)} + ${esc(p.d)}</p><span class="big-score">${total}% compatible</span></div>` : ''}
-        <div><h2>${esc(p.d)}, ${p.age}</h2><p class="tagline" style="margin-top:6px">${esc(p.tag)}</p><p class="note" style="text-align:left;margin-top:6px">Looking for: ${esc(p.look)}</p></div>
-        <div><h3>About me</h3><p class="bio" style="margin-top:6px">${fill(p.bio)}</p></div>
-        ${p.pr.map(([q, a]) => `<div class="qa"><small>${esc(q)}</small><p>${fill(a)}</p></div>`).join('')}
-        <div class="flags"><div class="flag red"><span>✕</span><span>${fill(p.red)}</span></div><div class="flag green"><span>✔</span><span>${fill(p.green)}</span></div></div>
-        ${match && why.length ? `<div><h3>Why we click</h3><ul class="why" style="margin-top:8px">${why.map((w) => `<li>${esc(w.text)}</li>`).join('')}</ul></div>` : ''}
-        <div><h3>How we score for you</h3><div style="margin-top:8px">${barsHTML(code)}</div></div>
-        <div><h3>By the numbers <span style="text-transform:none;letter-spacing:0">(tap for source)</span></h3><div style="margin-top:8px">${statGrid(code)}</div></div>
-        <div class="story"><h3>${esc(p.story[0])}</h3><p>${fill(p.story[1])}</p><p class="check">Quirky-story facts are still being fact-checked.</p></div>
+    return `<div class="dhead"><button class="ibtn" data-act="sheet-x" aria-label="Back">‹</button><div class="t">${esc(p.d)} Profile<em>UHF-${h.code}</em><small>${esc(h.borough)} · ${h.zips.length} ZIPs</small></div></div>
+      <div class="dbody">
+        ${match ? `<div class="panel g matchbanner"><b>It's a match!</b><span>${esc(U.name)} + ${esc(p.d)}</span></div>` : ''}
+        <div class="hero-wrap"><div class="dhero"><div class="media">${photo(code, 0)}</div><span class="bpill">● ${total}% Compatibility</span><span class="bpill age">Age: ${p.age}</span><div class="htext"><h1>${esc(p.d)}</h1><small>ZIP: ${h.zips.join(', ')} · ${esc(h.borough)}</small></div></div></div>
+        <div class="panel bio"><h4>EXTENDED BIO</h4>“${fill(p.bio)}”</div>
+        <div class="tags">${hashtags(code).map((t) => `<span class="tag">${esc(t)}</span>`).join('')}</div>
+        <div class="panel"><h4>LOOKING FOR</h4>${esc(p.look)}</div>
+        ${p.pr.map(([q, a]) => `<div class="panel"><h4>${esc(q.toUpperCase().replace(/:$/, ''))}</h4>${fill(a)}</div>`).join('')}
+        <div class="panel g"><h4>▲ GREEN FLAGS</h4>${fill(p.green)}</div>
+        <div class="panel r"><h4>▼ RED FLAGS</h4>${fill(p.red)}</div>
+        ${match && why.length ? `<div class="panel g"><h4>WHY WE CLICK</h4><ul class="why">${why.map((w) => `<li>${esc(w.text)}</li>`).join('')}</ul></div>` : ''}
+        <div class="panel"><h4>HOW WE SCORE FOR YOU</h4>${barsHTML(code)}</div>
+        <div class="sec">Open Data Deep-Dive <em>Socrata Verified</em></div>
+        ${deepDive(code)}
+        <div class="panel story"><h4>${esc(p.story[0].toUpperCase())}</h4>${fill(p.story[1])}<p class="check">Quirky-story facts are still being fact-checked.</p></div>
         ${match ? startLooking(code) : ''}
-        ${p.credit ? `<p class="note">Photo: ${esc(p.credit)}</p>` : ''}
-        <div class="guarantee">🛡️ Civic Open Data Guarantee. Values shown are cited or left blank. Not affiliated with the MTA, HPD, or real estate syndicates.</div>
+        ${creditsHTML(code)}
+        <div class="panel guarantee">🛡 Civic Open Data Guarantee. Values shown are cited or left blank. Not affiliated with the MTA, HPD, or real estate syndicates.</div>
       </div>`;
   }
 
@@ -399,7 +474,7 @@
     const q = encodeURIComponent(`apartments for rent ${p.q}`);
     const near = h.lines.length ? `Start near the <b>${esc(lines(h))}</b> (${h.stations} station${h.stations === 1 ? '' : 's'}).` : 'This area has no subway station. Look near buses, rail or the ferry.';
     const rent = h.rent_typical == null ? 'We have no rent data for this area.' : `Typical rent here is <b>${t.rent}</b> (Zillow rent index, a median across ${h.rent_zip_count} of ${h.zips.length} ZIPs, not a quote).`;
-    return `<div class="story" style="background:linear-gradient(135deg,#dcfbef,#e2f5ff)"><h3>🔑 Where to start looking</h3>
+    return `<div class="panel g lookpanel"><h4>WHERE TO START LOOKING</h4>
       <p>${near} ${rent}</p><p style="margin-top:6px">ZIPs to search: <b>${h.zips.join(', ')}</b></p>
       <div class="links" style="margin-top:12px">
         <a class="a-btn" href="https://www.google.com/search?q=${q}" target="_blank" rel="noopener">Search listings in ${esc(p.q.replace(/ (Brooklyn|Bronx|Queens|Manhattan|Staten Island)$/, ''))} <span>↗</span></a>
@@ -413,7 +488,6 @@
   function openMatch(code, sup) {
     const p = PROF[code];
     openSheet(`${profileBody(code, true)}${sup ? '<p class="note" style="margin-top:6px">⭐ Super Match! Yours is ranked first on the results screen.</p>' : ''}<div class="sheet-cta"><button class="btn block" data-act="chat" data-code="${code}" data-from="match">Chat with ${esc(p.d)}</button><button class="btn mint block" data-act="match-next">${S.idx + 1 >= S.deck.length ? 'See all my matches' : 'Keep swiping →'}</button></div>`, 'match', true);
-    $('.sheet-hero', sheet).insertAdjacentHTML('beforeend', `<div style="position:absolute;left:0;right:0;bottom:0;height:60px;background:linear-gradient(transparent,var(--paper))"></div>`);
     void p;
   }
 
@@ -448,10 +522,11 @@
     const p = PROF[code], total = (S ? S.scores[code] : L.score(BY[code], U)).total;
     chatCode = code; chatFrom = from;
     chatHist = (chats[code] || { msgs: [] }).msgs;
-    openSheet(`<div class="chat-head"><div class="th">${ART.sceneSVG(code, p)}</div><div><b>${esc(p.d)}</b><span>${total}% compatible · AI playing a neighborhood</span></div><button class="btn alt" data-act="chat-back">Back</button></div>
-      <div class="chat-log" id="chat-log" aria-live="polite"><div class="chat-summary"><h3>You &amp; ${esc(p.d)} Matched!</h3><p>Ask about rent, rats, transit or what it's really like before you sign a lease.</p><div class="stats3"><div><small>TYPICAL RENT</small><b>${esc(L.rawValue('rent', BY[code]).replace('/mo', ''))}</b></div><div><small>${U.work === 'remote' ? 'SUBWAY STATIONS' : 'TO WORK'}</small><b>${U.work === 'remote' ? BY[code].stations : esc(L.rawValue('commute', BY[code], U))}</b></div><div><small>RAT SIGNS</small><b>${BY[code].rat_active_pct == null ? '—' : BY[code].rat_active_pct.toFixed(0) + '%'}</b></div></div></div>${bubble('them', `Hey ${U.name}. ${p.tag}`)}${chatHist.map((m) => bubble(m.role === 'model' ? 'them' : 'me', m.text)).join('')}</div>
+    const ph = (PHOTOS[code] || [])[0], h_ = BY[code];
+    openSheet(`<div class="chead"><button class="ibtn" data-act="chat-back" aria-label="Back">‹</button><div class="av">${ph ? `<img src="${esc(ph.src)}" alt="">` : esc(p.d.charAt(0))}</div><div class="t"><strong>${esc(p.d)}</strong><small><span class="m">● matched</span> · ${total}% compatible · AI playing a neighborhood</small></div></div>
+      <div class="chat-log" id="chat-log" aria-live="polite"><div class="matchcard"><h3>You &amp; ${esc(p.d)} Matched!</h3><p>Ask about rent, rats, transit or what it's really like before you sign a lease.</p><div class="tiles"><div class="tile"><small>TYPICAL RENT</small><b>${esc(L.rawValue('rent', h_).replace('/mo', ''))}</b></div><div class="tile"><small>${U.work === 'remote' ? 'SUBWAY STATIONS' : 'TO WORK'}</small><b>${U.work === 'remote' ? h_.stations : esc(L.rawValue('commute', h_, U))}</b></div><div class="tile"><small>RAT SIGNS</small><b>${h_.rat_active_pct == null ? '—' : h_.rat_active_pct.toFixed(0) + '%'}</b></div></div></div>${bubble('them', `Hey ${U.name}. ${p.tag}`)}${chatHist.map((m) => bubble(m.role === 'model' ? 'them' : 'me', m.text)).join('')}</div>
       <div class="qchips"><button data-q="Best coffee spot?">☕ Coffee</button><button data-q="What's the typical rent?">💵 Avg Rent</button><button data-q="How is the commute?">🚇 Commute</button><button data-q="Any rat problems?">🐀 Rats</button></div>
-      <form class="chat-form" id="chat-form"><input id="chat-in" autocomplete="off" maxlength="300" placeholder="Say something to ${esc(p.d)}…" aria-label="Message"><button class="btn mint" type="submit">Send</button></form>`, 'chat', true);
+      <form class="chat-form" id="chat-form"><input id="chat-in" autocomplete="off" maxlength="300" placeholder="Ask ${esc(p.d)} anything…" aria-label="Message"><button class="send" type="submit" aria-label="Send">↑</button></form>`, 'chat', true);
     $('#chat-form').addEventListener('submit', (e) => { e.preventDefault(); sendChat(); });
     const log = $('#chat-log'); log.scrollTop = log.scrollHeight;
     $('#chat-in').focus({ preventScroll: true });
@@ -567,7 +642,8 @@
     const tap = t.closest('[data-tap]');
     if (tap && S) {
       const card = tap.closest('.card'), code = card.dataset.code;
-      S.photo[code] = (S.photo[code] + Number(tap.dataset.tap) + 3) % 3;
+      const nSlides = mediaList(code).length;
+      S.photo[code] = (S.photo[code] + Number(tap.dataset.tap) + nSlides) % nSlides;
       $('[data-slide]', card).innerHTML = photo(code, S.photo[code]);
       $$('.bars i', card).forEach((b, i) => b.classList.toggle('on', i === S.photo[code]));
       return;
