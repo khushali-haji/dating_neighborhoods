@@ -4,7 +4,12 @@ A dating-app for NYC neighborhoods. Fill in a profile, swipe on 42 neighborhoods
 
 ## Run it
 
-Open `index.html` in a browser (phone-width works best). No server, no build, no network needed.
+```
+cp .env.example .env     # then paste your Gemini key into .env (git-ignored)
+python3 server.py        # http://localhost:8000
+```
+
+The swiping works by just opening `index.html`, but the **chat with your match** needs `server.py`: it serves the app and forwards chat to Gemini so the key never reaches the browser. Without a key, the chat shows an error and everything else still works.
 
 ## Refresh the data
 
@@ -19,6 +24,8 @@ Python 3, standard library only. Writes `data/neighborhoods.json` and `data/neig
 | File | What it is |
 |---|---|
 | `index.html`, `style.css` | Shell and styles |
+| `server.py` | Local server + Gemini chat proxy (reads `.env`) |
+| `chat.js` | Builds the neighborhood's persona prompt from real stats and calls `/api/chat` |
 | `app.js` | Screens: onboarding, swipe deck, match / reject / "are you sure" sheets, results |
 | `logic.js` | Pure logic: scoring, reasons, deck building, copy tokens (no DOM) |
 | `art.js` | Illustrated "photos" as inline SVG (swap in real photos here) |

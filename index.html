@@ -14,11 +14,17 @@
 
   <header class="top" id="top" hidden>
     <button class="icon-btn" id="btn-back" aria-label="Back">←</button>
-    <div class="brand" id="brand"><span class="brand-heart">💚</span> Swipe Right on NYC</div>
+    <div class="brand" id="brand">Swipe Right on NYC</div>
     <div class="top-right" id="top-right"></div>
   </header>
 
   <main class="stage" id="stage" aria-live="polite"></main>
+
+  <nav class="tabs" id="tabs" aria-label="Sections" hidden>
+    <button data-tab="swipe">Swipe</button>
+    <button data-tab="matches">Matches</button>
+    <button data-tab="chats">Chats</button>
+  </nav>
 
   <footer class="foot" id="foot">
     <span id="foot-text"></span>
@@ -40,6 +46,7 @@
 <script src="data/profiles.js"></script>
 <script src="logic.js"></script>
 <script src="art.js"></script>
+<script src="chat.js"></script>
 <script src="app.js"></script>
 </body>
 </html>
