@@ -226,18 +226,25 @@
     for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
     return a;
   }
+  // Deck order is random on purpose: matches are a discovery, not a ranked list.
+  // Neighborhoods with a real photo (data/photos.js) come first; the rest go at the end of the queue.
+  const DECK_SIZE = DECK_TOP + DECK_WILD;
   function buildDeck(u, rnd = Math.random) {
     const all = scoreAll(u);
-    const sorted = HOODS.map((h) => h.code).sort((a, b) => all[b].total - all[a].total);
-    const top = sorted.slice(0, DECK_TOP);
-    const rest = sorted.slice(DECK_TOP);
+    const hasPhoto = (c) => !!(root.PHOTOS && root.PHOTOS[c] && root.PHOTOS[c].length);
+    const byScore = HOODS.map((h) => h.code).sort((a, b) => all[b].total - all[a].total);
+    const photo = byScore.filter(hasPhoto), plain = byScore.filter((c) => !hasPhoto(c));
+    if (photo.length) {
+      const first = shuffle(photo, rnd).slice(0, DECK_SIZE);
+      // fill any remaining slots from the rest: a mix of likely matches and wildcards, shuffled, at the end
+      const need = DECK_SIZE - first.length;
+      const tail = shuffle(plain.slice(0, Math.ceil(need / 2)).concat(shuffle(plain.slice(Math.ceil(need / 2)), rnd).slice(0, Math.floor(need / 2))), rnd);
+      return { deck: first.concat(tail), scores: all };
+    }
+    const top = byScore.slice(0, DECK_TOP), rest = byScore.slice(DECK_TOP);
     const below = rest.filter((c) => all[c].total < MATCH_AT);
     const pool = below.length >= DECK_WILD ? below : rest.slice(-DECK_WILD);
-    const wild = shuffle(pool, rnd).slice(0, DECK_WILD);
-    let deck = shuffle(top.concat(wild), rnd);
-    const best = deck.findIndex((c) => top.indexOf(c) >= 0 && top.indexOf(c) < 3); // open with a strong card
-    if (best > 0) [deck[0], deck[best]] = [deck[best], deck[0]];
-    return { deck, scores: all };
+    return { deck: shuffle(top.concat(shuffle(pool, rnd).slice(0, DECK_WILD)), rnd), scores: all };
   }
 
   // ---------------------------------------------------------------- extremes for the "stat poster" photo

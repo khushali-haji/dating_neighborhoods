@@ -424,3 +424,73 @@ code { font-family: var(--mono); }
 
 .fc { display: block; overflow: visible; -webkit-line-clamp: unset; }
 .fc > span { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+
+
+/* ======== elegant, squared-off controls + welcome ======== */
+.btn, .cta { border-radius: 6px; box-shadow: none; letter-spacing: .02em; }
+.btn { min-height: 52px; }
+.btn.alt { border: 1px solid var(--ink); background: transparent; color: var(--ink); }
+.btn.ghost { background: transparent; color: var(--ink); border: 1px solid var(--ink); }
+.btn.mint { border-radius: 6px; }
+.sheet-cta .btn { border-radius: 6px; }
+.welcome { max-width: 340px; width: 100%; margin: 0 auto; gap: 22px; }
+.welcome h1 { font-size: clamp(38px, 12vw, 50px); letter-spacing: -1.8px; line-height: 1.02; }
+.welcome h1 em { color: inherit; }
+.welcome p { max-width: 30ch; }
+.eyebrow { display: flex; align-items: center; justify-content: center; gap: 12px; font-size: 10.5px; font-weight: 800; letter-spacing: .22em; text-transform: uppercase; color: var(--ink-2); }
+.eyebrow span { width: 28px; height: 1px; background: var(--ink-3); }
+.datastrip { display: grid; grid-template-columns: repeat(4, 1fr); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.datastrip div { padding: 12px 2px; display: grid; gap: 2px; }
+.datastrip div + div { border-left: 1px solid var(--line); }
+.datastrip b { font-size: 12.5px; font-weight: 800; }
+.datastrip small { font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); font-weight: 700; }
+.actions-col { display: grid; gap: 10px; }
+.welcome .note { font-size: 11.5px; letter-spacing: .01em; line-height: 1.7; }
+
+
+/* ======== fun: card fan + neighborhood ticker ======== */
+.ticker { margin: 0 -20px 6px; overflow: hidden; white-space: nowrap; border-bottom: 1px solid var(--line); background: #fbfaf6; padding: 9px 0; font-size: 10.5px; font-weight: 800; letter-spacing: .16em; text-transform: uppercase; color: var(--ink-2); }
+.ticker > div { display: inline-block; animation: tick 70s linear infinite; }
+.ticker i { font-style: normal; color: var(--gold); margin: 0 14px; font-size: 8px; vertical-align: 1px; }
+@keyframes tick { to { transform: translateX(-50%); } }
+.welcome { gap: 18px; }
+.fan { position: relative; height: 188px; margin-bottom: 4px; }
+.fcard { position: absolute; left: 50%; top: 14px; width: 118px; height: 156px; margin-left: -59px; border-radius: 8px; overflow: hidden; background: var(--ink); box-shadow: 0 12px 28px rgba(31,31,35,.22); border: 4px solid #fff; transform-origin: 50% 100%; }
+.fcard.l { transform: translateX(-74px) rotate(-10deg); animation: floatl 5s ease-in-out infinite; }
+.fcard.r { transform: translateX(74px) rotate(10deg); animation: floatr 5s ease-in-out infinite; }
+.fcard.c { z-index: 2; top: 0; width: 128px; height: 168px; margin-left: -64px; animation: floatc 5s ease-in-out infinite; }
+@keyframes floatl { 50% { transform: translateX(-74px) translateY(-5px) rotate(-12deg); } }
+@keyframes floatr { 50% { transform: translateX(74px) translateY(-5px) rotate(12deg); } }
+@keyframes floatc { 50% { transform: translateY(-6px); } }
+.fmedia { position: absolute; inset: 0; } .fmedia svg, .fmedia img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.fcard::after { content: ""; position: absolute; inset: 0; background: linear-gradient(transparent 55%, rgba(0,0,0,.7)); }
+.fname { position: absolute; left: 8px; right: 8px; bottom: 7px; z-index: 2; color: #fff; font-size: 10.5px; font-weight: 800; line-height: 1.15; letter-spacing: .02em; }
+.fstamp { position: absolute; z-index: 3; top: 14px; font-size: 15px; font-weight: 900; letter-spacing: .08em; padding: 1px 6px; border: 2.5px solid; border-radius: 4px; background: rgba(255,255,255,.88); }
+.fstamp.like { left: 8px; color: var(--green-d); border-color: var(--green-d); transform: rotate(-12deg); }
+.fstamp.nope { right: 8px; color: var(--red); border-color: var(--red); transform: rotate(12deg); }
+.welcome h1 { text-wrap: balance; }
+.datastrip b::before { content: ""; display: block; width: 6px; height: 6px; border-radius: 50%; margin: 0 auto 6px; background: var(--gold); }
+.datastrip div:nth-child(2n) b::before { background: var(--green); } .datastrip div:nth-child(3n) b::before { background: var(--red); }
+@media (prefers-reduced-motion: reduce) { .ticker > div, .fcard { animation: none !important; } }
+@media (max-height: 700px) { .fan { height: 150px; } .fcard { height: 126px; width: 96px; margin-left: -48px; } .fcard.c { height: 136px; width: 104px; margin-left: -52px; } }
+.fstamp.nope { left: 8px; right: auto; top: 10px; transform: rotate(-12deg); }
+.fstamp.like { right: 8px; left: auto; top: 10px; transform: rotate(12deg); }
+.fcard.l .fname, .fcard.r .fname { display: none; }
+.welcome { gap: 15px; }
+.fan { height: 176px; }
+.welcome p { font-size: 15px; }
+
+.me-photo { background: linear-gradient(135deg, #2b2b33, #5b4a2a 70%, var(--gold)); }
+.me-photo .avatar { width: 104px; height: 104px; border-radius: 50%; border: 4px solid #fff; box-shadow: 0 6px 18px rgba(0,0,0,.25); }
+.me-photo b { text-shadow: 0 1px 6px rgba(0,0,0,.4); }
+
+/* ======== full-bleed swipe surface: the card IS the screen, not a card inside one ======== */
+.deck-area { margin: 0; }
+.card { border-radius: 0; box-shadow: none; }
+.card.behind { transform: none; opacity: 1; filter: none; }
+.card.behind2 { display: none; }
+.under { border-top: 0; padding: 12px 18px 14px; }
+.tagline { display: -webkit-box !important; -webkit-line-clamp: 2; font-size: 15px; }
+.flagchips { border-top: 0; padding-top: 2px; }
+.actions { padding-top: 12px; }
+.photo { min-height: 160px; }

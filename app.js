@@ -82,16 +82,21 @@
   function showWelcome() {
     S = null; setTop(null);
     const hasSaved = !!U.name;
+    const names = Object.keys(PROF).map((c) => esc(PROF[c].d)).join('<i>◆</i>');
+    const fan = (code, cls, stamp) => `<div class="fcard ${cls}"><div class="fmedia">${photo(code, 0)}</div><span class="fname">${esc(PROF[code].d)}</span>${stamp ? `<span class="fstamp ${stamp[0]}">${stamp[1]}</span>` : ''}</div>`;
     screen(`
-      <div class="hero">
-        <h1>Swipe right<br>on <em>NYC</em></h1>
+      <div class="ticker" aria-hidden="true"><div>${names}<i>◆</i>${names}<i>◆</i></div></div>
+      <div class="hero welcome">
+        <div class="fan" aria-hidden="true">${fan('202', 'l', ['nope', 'NOPE'])}${fan('402', 'r', ['like', 'LIKE'])}${fan('211', 'c', null)}</div>
+        <div class="eyebrow"><span></span>Civic Compatibility Deck<span></span></div>
+        <h1>Swipe right<br>on NYC</h1>
         <p>42 neighborhoods, one dating profile each. Funny, flirty, and backed by real NYC Open Data.</p>
-        <div class="pill-row"><span class="pill">Real rat counts</span><span class="pill">Real air quality</span><span class="pill">Real commutes</span><span class="pill">Real rent</span></div>
-        <div class="stack">
-          <button class="btn block" data-act="start">${hasSaved ? 'Edit my profile' : 'Create my profile'} →</button>
-          ${hasSaved ? `<button class="btn alt block" data-act="quick">Skip ahead as ${esc(U.name)}</button>` : ''}
+        <div class="datastrip" aria-label="Real data"><div><b>Rats</b><small>inspections</small></div><div><b>Air</b><small>PM2.5</small></div><div><b>Commutes</b><small>MTA</small></div><div><b>Rent</b><small>Zillow</small></div></div>
+        <div class="actions-col">
+          <button class="btn block" data-act="start">${hasSaved ? 'Edit my profile' : 'Create my profile'}</button>
+          ${hasSaved ? `<button class="btn ghost block" data-act="quick">Skip ahead as ${esc(U.name)}</button>` : ''}
         </div>
-        <p class="note">Takes about a minute. No account, no tracking, nothing leaves your phone.</p>
+        <p class="note">Takes about a minute<br>No account · No tracking · Nothing leaves your phone</p>
       </div>`);
   }
 
@@ -204,6 +209,19 @@
       <div class="proj-l">${rows.map(([b, c]) => `<span><i style="background:${BORO_COLOR[b] || '#999'}"></i>${esc(b)} (${Math.round(100 * c / n)}%)</span>`).join('')}</div></div>`;
   }
 
+  // friendly placeholder avatar, varied by name, for where a photo of the user would go
+  function avatarSVG(name) {
+    let h = 7; for (const ch of String(name || '?')) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
+    const pick = (arr, k) => arr[Math.floor(h / k) % arr.length];
+    const skin = pick(['#f4cfb0', '#e3a981', '#c98a5e', '#8d5a3b', '#f1c9a5'], 1), hair = pick(['#2b2118', '#6b4226', '#b5762f', '#1a1a1f', '#8a8a92'], 5);
+    const shirt = pick(['#2f7a4d', '#b3203a', '#3b5bdb', '#f2b632', '#6c63f5'], 25), bg = pick(['#fbf1d9', '#e8f6ee', '#fbebee', '#e7eafc'], 125), style = Math.floor(h / 625) % 3;
+    const back = style === 1 ? `<path d="M27 46 Q25 14 50 14 Q75 14 73 46 L76 76 L24 76z" fill="${hair}"/>` : '';
+    const front = style === 2
+      ? `<circle cx="50" cy="13" r="8" fill="${hair}"/><path d="M30 42 Q30 20 50 20 Q70 20 70 42 Q62 30 50 30 Q38 30 30 42z" fill="${hair}"/>`
+      : `<path d="M30 42 Q30 18 50 18 Q70 18 70 42 Q62 29 50 29 Q38 29 30 42z" fill="${hair}"/>`;
+    return `<svg class="avatar" viewBox="0 0 100 100" role="img" aria-label="Your avatar"><circle cx="50" cy="50" r="50" fill="${bg}"/><g clip-path="url(#av)"><clipPath id="av"><circle cx="50" cy="50" r="50"/></clipPath>${back}<path d="M10 104 Q10 72 50 70 Q90 72 90 104z" fill="${shirt}"/><rect x="43" y="56" width="14" height="16" rx="6" fill="${skin}"/><circle cx="50" cy="44" r="19" fill="${skin}"/>${front}<circle cx="43" cy="45" r="2" fill="#2b2118"/><circle cx="57" cy="45" r="2" fill="#2b2118"/><path d="M44 53 Q50 58 56 53" fill="none" stroke="#2b2118" stroke-width="2" stroke-linecap="round"/><circle cx="38" cy="51" r="3" fill="#e57a7a" opacity=".25"/><circle cx="62" cy="51" r="3" fill="#e57a7a" opacity=".25"/></g></svg>`;
+  }
+
   function showPreview() {
     S = null; setTop({ back: true });
     const must = listFactors((v) => v >= 4), chill = listFactors((v) => v <= 2), dealb = listFactors((v) => v === 5);
@@ -213,7 +231,7 @@
       <p class="q-sub">This is what neighborhoods see before they decide whether you\'re their type.</p>
       <div class="live-banner">✔ Live Profile: 9/9 preferences ready to calibrate</div>
       <article class="me-card">
-        <div class="me-photo" aria-hidden="true"><span class="ini">${esc((U.name || "?").charAt(0).toUpperCase())}</span><b>${esc(U.name)}</b></div>
+        <div class="me-photo" aria-hidden="true">${avatarSVG(U.name)}<b>${esc(U.name)}</b></div>
         <div class="me-body">
           <div class="prompt"><small>My ideal Saturday night</small><p>${esc(VIBE_OPTS[U.vibe][1])}</p></div>
           <div class="prompt"><small>My rent energy</small><p>${BUDGET_OPTS[U.budget][1]}</p></div>
@@ -259,8 +277,6 @@
         <div class="tapz l" data-tap="-1"></div><div class="tapz r" data-tap="1"></div>
         <div class="shade"></div>
         <div class="loc-pill">📍 ${esc(h.borough.toUpperCase())} · ${esc(h.code)}</div>
-        <div class="match-pill" title="Compatibility with your profile">${total}% MATCH</div>
-        ${total >= L.TOP_PICK_AT ? '<div class="toppick">★ Top pick for you</div>' : ''}
         <div class="stamp like">LIKE</div><div class="stamp nope">NOPE</div><div class="stamp sup">SUPER</div>
         <div class="swipe-hints" aria-hidden="true"><span class="l">← Swipe Left to Pass</span><span class="r">Swipe Right to Like →</span></div>
       </div>
@@ -451,7 +467,7 @@
     return `<div class="dhead"><button class="ibtn" data-act="sheet-x" aria-label="Back">‹</button><div class="t">${esc(p.d)} Profile<em>UHF-${h.code}</em><small>${esc(h.borough)} · ${h.zips.length} ZIPs</small></div></div>
       <div class="dbody">
         ${match ? `<div class="panel g matchbanner"><b>It's a match!</b><span>${esc(U.name)} + ${esc(p.d)}</span></div>` : ''}
-        <div class="hero-wrap"><div class="dhero"><div class="media">${photo(code, 0)}</div><span class="bpill">● ${total}% Compatibility</span><span class="bpill age">Age: ${p.age}</span><div class="htext"><h1>${esc(p.d)}</h1><small>ZIP: ${h.zips.join(', ')} · ${esc(h.borough)}</small></div></div></div>
+        <div class="hero-wrap"><div class="dhero"><div class="media">${photo(code, 0)}</div><span class="bpill">${match ? `● ${total}% Compatibility` : '● ' + esc(h.borough)}</span><span class="bpill age">Age: ${p.age}</span><div class="htext"><h1>${esc(p.d)}</h1><small>ZIP: ${h.zips.join(', ')} · ${esc(h.borough)}</small></div></div></div>
         <div class="panel bio"><h4>EXTENDED BIO</h4>“${fill(p.bio)}”</div>
         <div class="tags">${hashtags(code).map((t) => `<span class="tag">${esc(t)}</span>`).join('')}</div>
         <div class="panel"><h4>LOOKING FOR</h4>${esc(p.look)}</div>
@@ -459,7 +475,7 @@
         <div class="panel g"><h4>▲ GREEN FLAGS</h4>${fill(p.green)}</div>
         <div class="panel r"><h4>▼ RED FLAGS</h4>${fill(p.red)}</div>
         ${match && why.length ? `<div class="panel g"><h4>WHY WE CLICK</h4><ul class="why">${why.map((w) => `<li>${esc(w.text)}</li>`).join('')}</ul></div>` : ''}
-        <div class="panel"><h4>HOW WE SCORE FOR YOU</h4>${barsHTML(code)}</div>
+        ${match ? `<div class="panel"><h4>HOW WE SCORE FOR YOU</h4>${barsHTML(code)}</div>` : ''}
         <div class="sec">Open Data Deep-Dive <em>Socrata Verified</em></div>
         ${deepDive(code)}
         <div class="panel story"><h4>${esc(p.story[0].toUpperCase())}</h4>${fill(p.story[1])}<p class="check">Quirky-story facts are still being fact-checked.</p></div>
