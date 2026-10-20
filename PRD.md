@@ -40,7 +40,29 @@ Hackathon judges and attendees, likely viewing on a phone. People who rent or ma
 
 1. **Profile (start screen).** Short questions, tap to answer, like a dating-app profile. They set the user's preferences and weights (see section 6).
 2. **Swipe.** One card at a time: neighborhood name and a joke age, first-person bio, stat chips, red flag and green flag. Swipe by drag (pointer events) and by ❌ / 💚 buttons (buttons are the reliable fallback). Fly-off animation.
-3. **Match.** Among right-swiped neighborhoods, show the highest compatibility score: "It's a match!" plus a one-line explanation using a real stat. If nothing was right-swiped, show a funny "Still single in NYC" screen. Both screens have a restart button.
+3. **Two-way matching.** The neighborhood also "swipes" on the user: it says yes if compatibility is **60% or higher** (threshold is a constant, easy to change). After each swipe:
+
+   | User swipe | Neighborhood | Result |
+   |---|---|---|
+   | 💚 Yes | Yes | **Match.** Detailed profile in the neighborhood's own voice, a quirky story, and where to start looking for rent |
+   | 💚 Yes | No | **"It's not you, it's me."** Explains why, using the real stats where the user and neighborhood clash |
+   | ❌ No | Yes | **"Are you sure?"** Makes the case using the stats where they fit. The user can re-swipe to yes or confirm no (one re-swipe per neighborhood) |
+   | ❌ No | No | Quiet pass, next card |
+
+4. **Super likes.**
+   - **User super like:** each user gets 3. A super-liked neighborhood that also says yes is a **Super Match** and ranks above ordinary matches.
+   - **Neighborhood super like:** a neighborhood with compatibility **75% or higher** shows a "⭐ Top pick for you" badge on its card.
+5. **Results.** Matches listed with the highest compatibility first (Super Matches on top). If there are none, show a funny "Still single in NYC" screen. Both screens have a restart button.
+
+### Neighborhood voice and match content
+
+Each neighborhood has its own tone based on its reputation (for example posh for Williamsburg, artsy for Flatbush). The roast targets landlords, prices and stereotypes, never residents. A match shows:
+
+- A detailed description in that voice, tied to real stats
+- A quirky story. Facts must be verified by a teammate; if unsure, leave it out
+- Where to start looking for rent: search links per neighborhood on listing sites, no specific listings or streets
+
+The "not you, it's me" and "are you sure" explanations are generated from the factors with the largest score gaps, so every reason cites a real stat.
 
 Footer on every screen: "Data: NYC Open Data, pulled [date]." Each stat chip names its source dataset (tooltip or tap-to-reveal).
 
@@ -62,20 +84,19 @@ Footer on every screen: "Data: NYC Open Data, pulled [date]." Each stat chip nam
 
 ### Profile screens
 
-The nine factors are grouped into 5 to 6 tap-to-answer screens so the profile stays fast:
+The profile is a short form. For each of the nine factors the user rates **how important it is, 1 to 5** (1 = don't care, 5 = must have). The ratings are the weights used in matching. Two factors need an extra input:
 
-1. Budget (rent affordability)
-2. Vibe (population density and food density)
-3. Getting around (transit)
-4. Where you work (workplace connection)
-5. Safety and green space
-6. Health dealbreakers (air pollution, rats)
+- **Rent affordability:** budget bracket (low / mid / high) in addition to the 1 to 5 rating.
+- **Workplace connection:** the user picks a work neighborhood in addition to the 1 to 5 rating.
+
+To keep it fast, the nine sliders are grouped on 3 to 4 screens (for example: money and getting around; vibe, food and green space; safety; health, air and rats).
 
 ### Matching logic (proposed)
 
 - Each neighborhood gets a 0 to 100 score per factor, based on its rank among the 12 (1 = best).
-- Each profile answer sets a weight for the factor.
+- The 1 to 5 importance rating is the weight for that factor.
 - Compatibility = weighted average, shown as a percentage.
+- Compatibility is computed for all neighborhoods up front. The deck shows the top ~15 by score.
 - If a factor's data is `null` for a neighborhood, that factor is skipped and the score is reweighted. Never guessed.
 - Match = highest compatibility among right-swiped neighborhoods. Ties: the neighborhood swiped right first wins.
 
@@ -86,7 +107,9 @@ The nine factors are grouped into 5 to 6 tap-to-answer screens so the profile st
 
 ## 7. Neighborhoods
 
-12 neighborhoods, each defined as a list of ZIP codes. Verify ZIPs before use.
+**Direction:** use NYC's 42 official UHF (United Hospital Fund) neighborhoods, each defined by an official list of ZIP codes. Cards show friendly display names (for example "Williamsburg & Bushwick") and the data keeps the official name. This avoids hand-picking and verifying ZIP groupings and removes the air quality tie problem. The commute calculation would use MTA GTFS data, since hand-filling 42 x 5 lookups is too much. If time is short, cut back to about 20 to 25.
+
+The original shortlist of 12 is kept below as a reference for display names and tone. Verify ZIPs before use.
 
 - Bushwick (11237, 11221)
 - Williamsburg (11211, 11249)
@@ -188,3 +211,12 @@ Bold and playful. Strong color, big type, rounded cards. Original: no Tinder or 
 - Dataset IDs and fields actually used, and any not verified
 - Every `null` value that needs filling (rent, commute)
 - How to run it
+
+
+## 15. Build status (first build)
+
+- Built: 42 UHF neighborhoods, 9-factor 1-5 profile form, two-way swipe with match / reject / "are you sure", Super Likes, illustrated profile cards, results screen, data pipeline (`fetch_data.py`).
+- Split into `index.html`, `style.css`, `app.js`, `logic.js`, `art.js`, `data/` (still static, opens from `file://`) so teammates can work in parallel. See `README.md`.
+- Data decisions: rent from Zillow ZORI (not 1BR); commute estimated from MTA GTFS (subway only); crime placed by lat/long into ZIP polygons; rats as share of initial inspections failing for activity.
+- "Top pick" badge threshold changed to 75% (85% was rarely reached).
+- Not done: real photos, population-adjusted rats, fact-checking of the quirky stories, address-based workplace entry.
